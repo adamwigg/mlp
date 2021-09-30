@@ -1,11 +1,15 @@
 # Imports
 import numpy as np
-import pandas as pd
 import matplotlib as plt
 # Standard library imports
-from typing import Protocol, Any
+from abc import abstractmethod
+from typing import Any, Dict, List, Tuple, Protocol
 import pickle
 
+
+"""
+Utilities
+"""
 
 def progress_bar(current: int, total: int, title: str = 'Progress', data: str = '', width = 20) -> None:
     """
@@ -21,81 +25,69 @@ def progress_bar(current: int, total: int, title: str = 'Progress', data: str = 
     if current + 1 == total:
         print('\n')
         print(f"\N{grinning face} Done!")
-
-def make_report(experiment: 'Experiment', scope: str = 'summary') -> str:
-    """Return a string that summarises the experiment or reports on a attribute of an experiment"""
-    if scope == 'summary':
-        report = 'Summary of experiment'
-    elif scope == 'details':
-        report = f"===============================\n \
-            numInput = {experiment.numInput} \
-            numHidden = {experiment.numHidden} \
-            numOutput = {experiment.numOutput} \n\n\ \
-            inputs: \n {experiment.inputs}\n\n \
-            ihWeights: \n {experiment.ihWeights} \n\n \
-            hBiases: \n {experiment.hBiases} \
-            hOutputs: \n {experiment.hOutputs} \
-            hoWeights: \n {experiment.hoWeights}\n\n \
-            oBiases: \n {experiment.oBiases}\n\n \
-            hGrads: \n {experiment.hGrads}\n\n \
-            oGrads: \n {experiment.oGrads}\n\n \
-            ihPrevWeightsDelta: \n {experiment.ihPrevWeightsDelta}\n\n \
-            hPrevBiasesDelta: \n {experiment.hPrevBiasesDelta}\n\n \
-            hoPrevWeightsDelta: \n {experiment.hoPrevWeightsDelta}\n\n \
-            oPrevBiasesDelta: \n {experiment.oPrevBiasesDelta}\n\n \
-            outputs: \n {experiment.outputs}\n\n \
-            ===============================\n \
-            "
-        print(report)
-    else:
-        try:
-            attribute_to_print = getattr(experiment, scope)
-            report = attribute_to_print
-        except Exception as e:
-            print(f"\N{frowning face} Attribute not found or some other stuff up...")
-            print(e)
-
-    return report
  
-
-def preprocess(data: Any, ranges: list, values: tuple = (-1, 1)) -> Any:
-    """Takes in a numpy array and normalizes the the 'ranges' for the 'values and returns the array'"""
-    min, max = values
-    values = data
-
-
-def weights_update(weights: Any, eta: float):
-    new = weights - eta * weights
-    return new 
-
-# Activation Functions
+"""
+Activation Functions
+"""
 class Activator(Protocol):
-    def activation_function(self) -> None:
-        pass
+    @abstractmethod
+    def activation_function(self, x: float) -> float:
+        raise NotImplementedError
+
 
 class NoActivator:
-    def activation_function(self, x):
+    def activation_function(self, x: float) -> float:
         return x
 
 class ReluActivator:
-    def activation_function(self, x):
+    def activation_function(self, x: float) -> float:
         relu_x = x
         relu_x[x < 0] = 0
         return relu_x
 
 class SoftmaxActivator:
-    """Compute softmax values for each sets of scores in x. https://stackoverflow.com/a/38250088 """
-    def activation_function(self, x):
+    """Compute softmax values for each sets of scores in x."""
+    def activation_function(self, x: float) -> float:
         e_x = np.exp(x - np.max(x))
         soft_x = e_x / e_x.sum(axis=0)
         return soft_x
 
 
+"""
+Layers
+"""
+    
 class Layer:
-    def __init__(self, prev_nodes: int, layer_nodes: int, obj: Activator) -> None:
-        self.weights = np.random.uniform(low=-0.1, high=0.1, size=(prev_nodes, layer_nodes))
-        self.activator = obj
+    def __init__(self, layer_type: str,  prev_nodes: int, layer_nodes: int, activation: Activator) -> None:
+        self.type = layer_type
+        self.w = np.random.uniform(low=-0.1, high=0.1, size=(prev_nodes, layer_nodes))
+        self.activation = activation 
+    
+    def __repr__(self) -> str:
+        return (f'{self.type} layer (weights: {self.w.shape})')
 
+
+def forward_pass():
+    pass
+
+def back_propagation():
+    pass
+
+"""
+Dataset
+"""
+
+def one_hot(targets: Any) -> tuple[Any, Any]: 
+    """Simple one hot encoder for target values"""
+    unique, inverse = np.unique(targets, return_inverse=True)
+    onehot = np.eye(unique.shape[0])[inverse]
+    return onehot, unique
+
+
+def normalize(data: Any, ranges: list, values: tuple = (-1, 1)) -> Any:
+    """Takes in a numpy array and normalizes the the 'ranges' for the 'values and returns the array'"""
+    min, max = values
+    values = data
 
 class Dataset:
     """
@@ -105,10 +97,10 @@ class Dataset:
     Created by the AnnProject class when starting 
     a new project or loading from file.
     """
-    def __init__(self, data) -> None:
+    def __init__(self, data, normalize, target_idx) -> None:
         self.data = data
         self.normalize_parameters: list = []
-        self.target_column_index: int = -1 
+        self.target_column_index: int = -1
 
     @property
     def rows(self) -> int:
@@ -122,17 +114,18 @@ class Dataset:
         """Pretty string of an array"""
         return np.array2string(self.data, formatter={'float_kind':lambda x: "%.4f" % x})
 
-class Model:    
+
+class NN:    
     def __init__(self, input_nodes, hidden_nodes, hidden_layers, output_nodes) -> None:
         self.model = []
-        self.model.append(Layer(input_nodes, hidden_nodes, SoftmaxActivator))
-        if hidden_layers > 1:
-            for layer in range(hidden_layers-1):
-                self.model.append(Layer(hidden_nodes, hidden_nodes, SoftmaxActivator))
-        self.output_layer = Layer(hidden_nodes, output_nodes, NoActivator)
+        self.model.append(Layer('input', input_nodes, hidden_nodes, SoftmaxActivator))
+        if len(hidden_layers) > 1:
+            for layer in hidden_layers[1:]:
+                self.model.append(Layer('hidden', hidden_nodes, hidden_nodes, SoftmaxActivator))
+        self.output_layer = Layer('optput', hidden_nodes, output_nodes, NoActivator)
 
-    def initialize() -> None:  # Populate weights and biases with random numbers
-        pass
+        for layer in self.model:
+            print(layer)
 
 
 class Experiment:
@@ -145,12 +138,12 @@ class Experiment:
     - restored (loaded) from binary using 'project_load' 
     """
     def __init__(self, config) -> None:
-        self.config = config
+        self.config: Dict = config
         self.dataset: Dataset = None
         self.hyper_params: list = []
         self.total_epochs: int = 100
         self.results: dict = None
-        self.model: Model = None
+        self.model: NN = None
 
         np.random.seed(config['random_seed']) # Seed numpy generator
 
@@ -161,7 +154,9 @@ class Experiment:
             csv_data = np.genfromtxt(config['data_file_path'], 
                                     delimiter=config['data_seperator'],
                                     skip_header=config['header_rows'])
+
             new_experiment = cls(config)
+
             new_data = preprocess(csv_data, config['normalize_range'], config['normalize_values'])
             new_experiment.dataset = Dataset(new_data, config['target'], config['split'])
             print(f"\N{grinning face} {filepath} -> Created.")
@@ -193,19 +188,21 @@ class Experiment:
             print(f"\N{frowning face} File not found or bad stuff happened...")
             print(e)
 
-    def gridsearch(self, hyper_parametres: dict) -> None:
+    def gridsearch(self) -> None:
         """Creates a list of hyper perametre parametres as an input to a training run"""
-        hyper_params = []
-        for eta in hyper_parametres['eta']:
-            for hidden in hyper_parametres['hidden']:
-                hyper_params.append((eta, hidden))
-        self.hyper_params = hyper_params
+        # hyper_params = []
+        # for eta in hyper_parametres['eta']:
+        #     for hidden in hyper_parametres['hidden']:
+        #         hyper_params.append((eta, hidden))
+        # self.hyper_params = hyper_params
+        return []
     
     def train(self) -> None:
         """Training run loop"""
+        training_parameters = self.gridsearch()
         for params in self.hyper_params:
             eta, hidden = params  # unpack parameters 
-            self.model = Model(self.config['input_nodes'], hidden, self.config['hidden_layers'], self.config['output_nodes']) 
+            self.model = NN(self.config['input_nodes'], self.config['hidden_layers'][0], self.config['hidden_layers'][1], self.config['output_nodes']) 
             for epoch in range(self.total_epochs):
                 
 
@@ -213,7 +210,7 @@ class Experiment:
                 progress_bar(epoch, self.total_epochs, 'Epoch', accuracy)
 
     def report(self, details: str = 'summary') -> None:
-        print(make_report(self, details))
+        pass # print(make_report(self, details))
         
 
 def main():
@@ -221,3 +218,8 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+"""
+References:
+
+"""
