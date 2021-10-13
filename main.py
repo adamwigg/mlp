@@ -1,45 +1,43 @@
-"""
-A Simple ANN - Soft Computing, Semester 2, 2021
-"""
 import ann
+import report
 
-# Settings
+
+""" Experiment settings """
 config = {
     # Setup
-    "data_file_path": 'data/my_data.csv',  # Relative filepath to csv or text file
-    "data_seperator": ' ',  # Usually ' ' or ','
-    "header_rows": 0,  # Number of rows to ignore at start of file
+    "data_file": "data/iris_str.csv",  # Relative filepath to csv file
+    "data_seperator": ",",  # Usually ' ' or ','
+    "header_rows": 0,  # Number of rows to ignore at start of file for header
     "random_seed": 2021,  # Used to initiate the numpy random generator
-
     # Dataset
-    "split": (0.3, 0.3),  # Eg (.33, .33) for 33-33-33 or (.66) for 66-33
+    "train_test_split": (.33, .33,),  # Train > 0.65 will use '66/33' method
     "target": -1,  # Target index, -1 being last column
+    "normalize": True,  # normalize data
     "normalize_values": (-1, 1),  # Min and Max values
-    "normalize_range": [(0, 8)],  # List of (start, end) index ranges
-
-    # Model input and output
+    # Model settings
     "input_nodes": 12,  # Number of input values (features)
     "output_nodes": 3,  # Number of output values (classes)
-    "hidden_layers": (8, 2),  # hidden parameters (number of nodes, number of layers)
-
-    # Hyperparameters - multiple list values create a grid search
+    "hidden_layers": 2,  # Number of hidden layers
+    "activator": ann.Softmax,  # alternatives: ann.Relu, ann.Sigmoid
+    # Parameters - multiple values in the list create a grid search
     "eta": [0.1],  # Training rate
+    "hidden_nodes": [8],  # Hidden nodes
     "max_epochs": [150],  # Number of epochs to train
 }
 
+# Directory/filename for save/load experiment (pickle file)
+experiment_dir = "experiments/"
+experiment_file = "test_01.pickle"
 
-# Create experiment and prepare the data
+""" Create or load experiment"""
 my_exp = ann.Experiment.new(config)
-my_exp.data_preperation()
+# my_exp = ann.Experiment.load(experiment_dir + experiment_file)
 
-# Alternatively load previous
-# my_exp = ann.Experiment.load('file_path_to_pickle')
+# print(my_exp)
 
-my_exp.train()
+""" Run the experiment"""
+# my_exp.train()
+# print(report.print_experiment(my_exp))
 
-# acc, losss, w1, w2 = train(x, y, w1, w2, 0.1, 100)
-
-# Report - 'summary' (default), 'details' or any 'Experiment' property 
-my_exp.report()
-
-# my_exp.save('file_path_to_pickle') # Optional
+# my_exp.save(experiment_dir + experiment_file)
+print('Done!')
