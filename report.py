@@ -1,11 +1,12 @@
-"""
-Reports
-"""
+"""ANN Reports"""
 
 
-def experiment_data(experiment) -> str:
+def data_splits(experiment) -> str:
     """Print a summery description of an experiment"""
-    report = f"Training - x: {experiment.x_train.shape} y: {experiment.y_train.shape}\nTesting - x: {experiment.x_test.shape} y: {experiment.y_test.shape} \nValidation - x: {experiment.x_val.shape} y: {experiment.y_val.shape}"
+    report = f"\
+        Training - x: {experiment.x_train.shape} \y: {experiment.y_train.shape}\n \
+        Testing - x: {experiment.x_test.shape} y: {experiment.y_test.shape} \n \
+        Validation - x: {experiment.x_val.shape} y: {experiment.y_val.shape}"
     return report
 
 
