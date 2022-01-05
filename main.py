@@ -4,9 +4,7 @@ Adam Wigg @ University of Canberra for Soft Computing S2/2021
 """
 import ann
 
-
 def main():
-
     config = {  # All new experiment variables
         # Data
         "data_file": "data/iris_str.csv",  # Relative filepath to csv file
@@ -21,10 +19,10 @@ def main():
         # Experiment parameters
         "max_epochs": 200,  # Max number of epochs to train
         # eta and hidden - multiple values in the list create a grid search
-        "eta": [0.1],
+        "eta": 0.1,
         # Hidden layer in the form (no of hidden layers, no of nodes, activation function)
         # Available activation functions: ann.Relu(), ann.Tanh(), ann.Sigmoid() (output uses softmax)
-        "hidden_layers": [(2, 8, ann.Relu())] 
+        "hidden_layers": (2, 8, ann.Relu())
     }
 
     """
@@ -48,8 +46,8 @@ def main():
 
     """Modifying loaded experiment examples"""
     # my_experiment.max_epochs = 500
-    # my_experiment.eta = [0.1, 0.075, 0.05, 0.025]
-    # my_experiment.hidden_layers = [(1, 8), (2, 16), (3, 32)]
+    # my_experiment.eta = 0.1
+    # my_experiment.hidden_layers = (4, 12, ann.Relu())
 
     """Run the experiment and report the results"""
     my_experiment.run()
@@ -58,11 +56,7 @@ def main():
     """Save the experiment"""
     my_experiment.save(experiment_dir + experiment_file)
 
-    """Other fun stuff"""
-    # my_experiment.all_results() # Print list results of a loaded experiment
-    # my_experiment.result(0) # pass in index of result to print details
-    # my_experiment.best_result('accuracy') # find best by 'accuracy' alternatively 'f1_score', 'percision', or 'recall'
-
+   
     print(f"\U0001F4BB Done!")
 
 if __name__ == "__main__":
